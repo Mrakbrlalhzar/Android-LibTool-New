@@ -21,7 +21,12 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: ایجاد فایل gradle-wrapper.properties با نسخه ۸.۴
+    - name: نصب Gradle 8.4 (برای ساخت Wrapper)
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: 8.4
+
+    - name: ایجاد فایل gradle-wrapper.properties
       run: |
         mkdir -p gradle/wrapper
         cat > gradle/wrapper/gradle-wrapper.properties << EOF
@@ -32,8 +37,8 @@ jobs:
         zipStorePath=wrapper/dists
         EOF
 
-    - name: راه‌اندازی Gradle Wrapper
-      uses: gradle/actions/setup-gradle@v4
+    - name: ساخت gradle-wrapper.jar با دستور wrapper
+      run: gradle wrapper --gradle-version 8.4
 
     - name: اعطای دسترسی اجرا به gradlew
       run: chmod +x gradlew
