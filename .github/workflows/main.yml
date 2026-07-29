@@ -1,0 +1,82 @@
+# Build APK for armeabi-v7a (Android 8.0 / API 26)
+# Triggers: push and manual.
+name: Android Build (armeabi-v7a, Android 8)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Create SDK directories
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT
+
+      - name: Download and install Android commandline tools
+        run: |
+          cd $ANDROID_SDK_ROOT
+          # download commandline tools (versioned binary URL may change over time)
+          curl -fSLo commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q commandlinetools.zip -d cmdline-tools-temp
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools-temp/cmdline-tools/* cmdline-tools/latest/
+          rm -rf commandlinetools.zip cmdline-tools-temp
+
+      - name: Add sdkmanager and platform-tools to PATH for subsequent steps
+        run: |
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+
+      - name: Install SDK platforms, build-tools and NDK (API 26, Build Tools 30.0.3, NDK r21)
+        env:
+          ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
+        run: |
+          # ensure sdkmanager is available in PATH because of previous step
+          sdkmanager --version
+          yes | sdkmanager --install "platform-tools" "platforms;android-26" "build-tools;30.0.3" "ndk;21.4.7075529"
+          yes | sdkmanager --licenses
+
+      - name: Expose ANDROID_NDK_HOME and ANDROID_HOME
+        run: |
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/21.4.7075529" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          # add ndk to PATH for tools like ndk-build (if needed)
+          echo "$ANDROID_SDK_ROOT/ndk/21.4.7075529" >> $GITHUB_PATH
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties','**/gradle-wrapper.properties') }}
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build APK (assembleDebug)
+        # Increase memory and avoid daemon for CI
+        run: |
+          ./gradlew -Porg.gradle.jvmargs="-Xmx3g" assembleDebug --no-daemon
+
+      - name: Upload built APK(s)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apks
+          path: app/build/outputs/apk/debug/*.apk
