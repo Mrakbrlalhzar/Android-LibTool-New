@@ -1,18 +1,18 @@
-name: ساخت APK برای اندروید ۸.۱ و ARMv7
+name: Build Android APK
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:  # قابلیت اجرای دستی
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: دریافت کدهای مخزن
+    - name: دریافت کدها
       uses: actions/checkout@v4
 
     - name: نصب JDK 17
@@ -21,14 +21,23 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: دادن دسترسی اجرا به gradlew
-      run: chmod +x gradlew
+    - name: نصب Gradle (برای ساختن Wrapper)
+      run: |
+        sudo apt update
+        sudo apt install -y gradle
 
-    - name: ساخت فایل APX نهایی (نسخه Release)
+    - name: ساخت فایل‌های Wrapper (اگر وجود نداشت)
+      run: |
+        if [ ! -f gradlew ]; then
+          gradle wrapper
+        fi
+        chmod +x gradlew
+
+    - name: ساخت APK با Gradle
       run: ./gradlew assembleRelease
 
-    - name: آپلود خروجی به عنوان Artifact
+    - name: آپلود APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-armv7
+        name: app-release
         path: app/build/outputs/apk/release/*.apk
