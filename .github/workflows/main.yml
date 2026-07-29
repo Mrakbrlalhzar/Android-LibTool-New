@@ -35,6 +35,9 @@ jobs:
     - name: راه‌اندازی Gradle Wrapper
       uses: gradle/actions/setup-gradle@v4
 
+    - name: اعطای دسترسی اجرا به gradlew
+      run: chmod +x gradlew
+
     - name: ساخت APK
       run: ./gradlew assembleRelease
 
