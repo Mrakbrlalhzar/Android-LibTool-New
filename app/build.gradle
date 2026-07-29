@@ -1,21 +1,19 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 34   // ✅ به‌روز برای کامپایل با JDK 17
+    compileSdkVersion 34
 
     defaultConfig {
         applicationId "com.android.support"
-        minSdkVersion 27    // ✅ اندروید ۸.۱
+        minSdkVersion 27      // اندروید ۸.۱
         targetSdkVersion 34
         versionCode 1
         versionName "3.2"
 
         ndk {
-            // ✅ فقط ARMv7 (برای گوشی شما) - اگر شبیه‌ساز یا دستگاه‌های دیگر هم نیاز داری، بقیه را اضافه کن
-            abiFilters 'armeabi-v7a'
+            abiFilters 'armeabi-v7a'   // فقط ARMv7
         }
 
-        // تعریف signingConfigs.debug (قبلاً تعریف نشده بود)
         signingConfig signingConfigs.debug
     }
 
@@ -26,7 +24,6 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        // اگر نیاز به release signing داری، اینجا اضافه کن
     }
 
     buildTypes {
@@ -34,7 +31,6 @@ android {
             shrinkResources false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // برای release هم می‌توانی از همان کلید debug استفاده کنی (فقط برای تست)
             signingConfig signingConfigs.debug
         }
         debug {
@@ -44,7 +40,7 @@ android {
         }
     }
 
-    // اگر پروژه‌ات کد NDK (C/C++) دارد، این بخش را نگه دار، در غیر این صورت کل این بخش را حذف کن
+    // اگر کد NDK نداری، این بخش را حذف کن
     externalNativeBuild {
         ndkBuild {
             path file('src/main/jni/Android.mk')
