@@ -1,23 +1,41 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 34   // ✅ به‌روز برای کامپایل با JDK 17
+
     defaultConfig {
         applicationId "com.android.support"
-        minSdkVersion 19
-        targetSdkVersion 30
+        minSdkVersion 27    // ✅ اندروید ۸.۱
+        targetSdkVersion 34
         versionCode 1
         versionName "3.2"
+
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86'
+            // ✅ فقط ARMv7 (برای گوشی شما) - اگر شبیه‌ساز یا دستگاه‌های دیگر هم نیاز داری، بقیه را اضافه کن
+            abiFilters 'armeabi-v7a'
         }
+
+        // تعریف signingConfigs.debug (قبلاً تعریف نشده بود)
         signingConfig signingConfigs.debug
     }
+
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        // اگر نیاز به release signing داری، اینجا اضافه کن
+    }
+
     buildTypes {
         release {
             shrinkResources false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // برای release هم می‌توانی از همان کلید debug استفاده کنی (فقط برای تست)
+            signingConfig signingConfigs.debug
         }
         debug {
             shrinkResources false
@@ -25,6 +43,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    // اگر پروژه‌ات کد NDK (C/C++) دارد، این بخش را نگه دار، در غیر این صورت کل این بخش را حذف کن
     externalNativeBuild {
         ndkBuild {
             path file('src/main/jni/Android.mk')
@@ -32,7 +52,6 @@ android {
     }
 }
 
-//dependencies must be placed below 'android' brackets to get it work on AIDE
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 }
